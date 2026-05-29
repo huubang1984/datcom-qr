@@ -1,0 +1,58 @@
+{% extends "admin_base.html" %}
+{% block title %}Nhân viên{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:16px">Quản lý nhân viên ({{ employees|length }})</h1>
+
+<details class="add-form">
+  <summary>📥 Import danh sách từ Excel / CSV</summary>
+  <p class="muted" style="margin-top:10px">
+    File cần có các cột: <strong>Mã NV, Họ tên, Phòng ban, PIN</strong> (dòng đầu là tiêu đề).
+    Mã đã tồn tại sẽ được cập nhật. Nếu PIN trống, mặc định = 4 ký tự cuối của mã NV.
+    <a href="{{ url_for('admin_employee_template') }}">⬇ Tải file mẫu (CSV)</a>
+  </p>
+  <form method="post" action="{{ url_for('admin_employee_import') }}" enctype="multipart/form-data" style="margin-top:12px">
+    <input type="file" name="file" accept=".xlsx,.csv" required style="padding:10px;font-size:14px">
+    <button class="btn btn-primary" type="submit">Tải lên &amp; Import</button>
+  </form>
+</details>
+
+<details class="add-form">
+  <summary>+ Thêm nhân viên mới</summary>
+  <form method="post" action="{{ url_for('admin_employee_add') }}">
+    <div class="grid2">
+      <div><label>Mã NV *</label><input type="text" name="code" required></div>
+      <div><label>Họ tên *</label><input type="text" name="name" required></div>
+      <div><label>Phòng ban</label><input type="text" name="department"></div>
+      <div><label>PIN *</label><input type="text" name="pin" required></div>
+    </div>
+    <button class="btn btn-primary" type="submit">Thêm</button>
+  </form>
+</details>
+
+{# Mỗi NV 1 form riêng, đặt ngoài bảng; input trong bảng liên kết qua thuộc tính form= #}
+{% for e in employees %}
+<form id="emp-{{ e.id }}" method="post" action="{{ url_for('admin_employee_update', emp_id=e.id) }}"></form>
+{% endfor %}
+
+<table>
+  <thead>
+    <tr><th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Trạng thái</th><th>Đổi PIN / Sửa</th></tr>
+  </thead>
+  <tbody>
+    {% for e in employees %}
+    <tr>
+      <td>{{ e.code }}</td>
+      <td><input form="emp-{{ e.id }}" type="text" name="name" value="{{ e.name }}" style="padding:8px;font-size:14px"></td>
+      <td><input form="emp-{{ e.id }}" type="text" name="department" value="{{ e.department or '' }}" style="padding:8px;font-size:14px"></td>
+      <td><label style="font-weight:400"><input form="emp-{{ e.id }}" type="checkbox" name="active" {% if e.active %}checked{% endif %}> Hoạt động</label></td>
+      <td style="display:flex;gap:8px;align-items:center">
+        <input form="emp-{{ e.id }}" type="text" name="pin" placeholder="PIN mới (bỏ trống = giữ)" style="padding:8px;font-size:14px">
+        <button form="emp-{{ e.id }}" class="btn btn-primary btn-sm" type="submit">Lưu</button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">Chưa có nhân viên. Thêm mới hoặc dùng seed.py.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

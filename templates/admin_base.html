@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Quản trị{% endblock %} — Đặt cơm</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% if session.get('admin_id') %}
+  <div class="admin-top">
+    <div class="nav">
+      <strong style="margin-right:18px">🍱 HCNS — Đặt cơm</strong>
+      <a href="{{ url_for('admin_dashboard') }}">Hôm nay</a>
+      <a href="{{ url_for('admin_employees') }}">Nhân viên</a>
+      <a href="{{ url_for('admin_report') }}">Báo cáo tháng</a>
+      <a href="{{ url_for('admin_qr') }}">Mã QR</a>
+      <a href="{{ url_for('admin_config') }}">Cấu hình</a>
+    </div>
+    <div>
+      <span style="margin-right:14px">{{ session.get('admin_username') }}</span>
+      <a href="{{ url_for('admin_logout') }}">Đăng xuất</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

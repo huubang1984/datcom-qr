@@ -1,0 +1,9 @@
+Flask>=3.0
+Flask-SQLAlchemy>=3.1
+qrcode[pil]>=7.4
+openpyxl>=3.1
+gunicorn>=22.0
+
+# PostgreSQL cho deploy cloud (Render). Dùng marker để bỏ qua trên Python 3.14
+# local — nơi chưa có wheel; Render được ghim 3.12 nên vẫn cài bình thường.
+psycopg2-binary>=2.9; python_version < "3.14"

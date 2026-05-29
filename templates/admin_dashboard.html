@@ -1,0 +1,43 @@
+{% extends "admin_base.html" %}
+{% block title %}Hôm nay{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:16px">Đặt cơm ngày {{ day.strftime('%d/%m/%Y') }}</h1>
+
+<form class="toolbar" method="get">
+  <label style="margin:0">Chọn ngày:</label>
+  <input type="date" name="date" value="{{ day.strftime('%Y-%m-%d') }}">
+  <button class="btn btn-primary btn-sm" type="submit">Xem</button>
+</form>
+
+<div class="stat-row">
+  <div class="stat blue"><div class="num">{{ total }}</div><div class="lbl">Tổng suất đăng ký</div></div>
+  <div class="stat green"><div class="num">{{ picked }}</div><div class="lbl">Đã nhận cơm</div></div>
+  <div class="stat amber"><div class="num">{{ not_picked }}</div><div class="lbl">Chưa nhận</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Giờ đăng ký</th><th>Trạng thái nhận</th></tr>
+  </thead>
+  <tbody>
+    {% for o in orders %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ o.employee.code }}</td>
+      <td>{{ o.employee.name }}</td>
+      <td>{{ o.employee.department or '' }}</td>
+      <td>{{ o.registered_at.strftime('%H:%M') }}</td>
+      <td>
+        {% if o.picked_up_at %}
+          <span class="tag tag-ok">Đã nhận {{ o.picked_up_at.strftime('%H:%M') }}</span>
+        {% else %}
+          <span class="tag tag-no">Chưa nhận</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">Chưa có đăng ký nào trong ngày.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

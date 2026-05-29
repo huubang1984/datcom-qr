@@ -1,0 +1,28 @@
+# Render Blueprint — deploy 1 chạm: web service Flask + PostgreSQL.
+# Hướng dẫn: đẩy code lên GitHub -> Render Dashboard -> New -> Blueprint -> chọn repo.
+databases:
+  - name: datcom-db
+    plan: free
+    databaseName: datcom
+    user: datcom
+
+services:
+  - type: web
+    name: datcom-qr
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: SECRET_KEY
+        generateValue: true          # Render tự sinh chuỗi bí mật
+      - key: DATABASE_URL
+        fromDatabase:
+          name: datcom-db
+          property: connectionString
+      - key: ADMIN_USERNAME
+        value: hcns
+      - key: ADMIN_PASSWORD
+        sync: false                   # Tự nhập trong Render Dashboard (bí mật)

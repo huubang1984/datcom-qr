@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Đặt cơm trưa</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="emp-wrap">
+    <div class="brand">
+      <h1>🍱 Đặt cơm trưa</h1>
+      <p>Đăng ký &amp; xác nhận nhận cơm</p>
+    </div>
+
+    <!-- Bước 1: nhập mã NV -->
+    <div class="card" id="step-code">
+      <h2>Nhập mã nhân viên</h2>
+      <label for="code">Mã nhân viên</label>
+      <input type="text" id="code" autocomplete="off" inputmode="text" placeholder="VD: NV001" autofocus>
+      <button class="btn btn-primary" id="btn-lookup">Tiếp tục</button>
+      <div id="msg-code"></div>
+    </div>
+
+    <!-- Bước 2: xác nhận người + chọn hành động -->
+    <div class="card hidden" id="step-action">
+      <div class="emp-name" id="emp-name"></div>
+      <div class="emp-dept" id="emp-dept"></div>
+      <div class="status-row" id="status-row"></div>
+      <button class="btn btn-primary" id="btn-do-register">📝 Đăng ký đặt cơm</button>
+      <button class="btn btn-success" id="btn-do-pickup">✅ Xác nhận đã nhận cơm</button>
+      <button class="btn btn-danger" id="btn-do-cancel">🗑 Hủy đăng ký</button>
+      <button class="btn btn-ghost" id="btn-back-1">← Đổi mã nhân viên</button>
+    </div>
+
+    <!-- Bước 3: nhập PIN -->
+    <div class="card hidden" id="step-pin">
+      <h2 id="pin-title">Xác nhận PIN</h2>
+      <p class="muted" id="pin-sub"></p>
+      <label for="pin" style="margin-top:12px">Mã PIN</label>
+      <input type="password" id="pin" inputmode="numeric" autocomplete="off" placeholder="••••">
+      <button class="btn btn-primary" id="btn-confirm">Xác nhận</button>
+      <button class="btn btn-ghost" id="btn-back-2">← Quay lại</button>
+      <div id="msg-pin"></div>
+    </div>
+
+    <!-- Bước 4: kết quả -->
+    <div class="card hidden center" id="step-result">
+      <div class="result-icon" id="result-icon">✅</div>
+      <h2 id="result-title"></h2>
+      <p class="muted" id="result-time"></p>
+      <button class="btn btn-primary" id="btn-done">Xong</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

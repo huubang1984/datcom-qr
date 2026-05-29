@@ -1,0 +1,17 @@
+{% extends "admin_base.html" %}
+{% block title %}Mã QR{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:16px">Mã QR đặt cơm</h1>
+<p class="muted" style="margin-bottom:18px">In mã này và dán ở căng-tin/cửa. Nhân viên quét để mở trang đặt cơm.</p>
+
+<div class="qr-box">
+  <img src="{{ url_for('admin_qr_png', url=base_url) }}" alt="QR đặt cơm">
+  <p style="margin-top:14px"><strong>Đường dẫn:</strong> {{ base_url }}</p>
+  <button class="btn btn-primary btn-sm" onclick="window.print()" style="margin-top:14px">🖨 In mã QR</button>
+</div>
+
+<p class="muted" style="margin-top:18px">
+  Nếu đường dẫn ở trên là <code>localhost</code> hoặc IP nội bộ, sau khi deploy lên cloud hãy mở lại trang này
+  để lấy mã QR với tên miền công khai.
+</p>
+{% endblock %}

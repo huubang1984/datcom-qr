@@ -1,0 +1,39 @@
+{% extends "admin_base.html" %}
+{% block title %}Báo cáo tháng{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:16px">Báo cáo trừ tiền cơm — tháng {{ month }}</h1>
+
+<form class="toolbar" method="get">
+  <label style="margin:0">Chọn tháng:</label>
+  <input type="month" name="month" value="{{ month }}">
+  <button class="btn btn-primary btn-sm" type="submit">Xem</button>
+  <a class="btn btn-success btn-sm" href="{{ url_for('admin_report_csv', month=month) }}" style="text-decoration:none;display:inline-block">⬇ Tải CSV (Excel)</a>
+</form>
+
+<div class="stat-row">
+  <div class="stat blue"><div class="num">{{ rows|length }}</div><div class="lbl">Số nhân viên đặt cơm</div></div>
+  <div class="stat green"><div class="num">{{ '{:,}'.format(grand_total) }}đ</div><div class="lbl">Tổng tiền trừ trong tháng</div></div>
+  <div class="stat amber"><div class="num">{{ '{:,}'.format(price) }}đ</div><div class="lbl">Đơn giá / suất</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Số ngày đặt</th><th>Đã nhận</th><th>Thành tiền</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.code }}</td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.department }}</td>
+      <td>{{ r.days }}</td>
+      <td>{{ r.picked }}</td>
+      <td><strong>{{ '{:,}'.format(r.amount) }}đ</strong></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">Không có dữ liệu đặt cơm trong tháng này.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="margin-top:12px">Lưu ý: tiền trừ tính theo <strong>số ngày đăng ký đặt</strong>. Cột "Đã nhận" để đối chiếu suất thực lấy.</p>
+{% endblock %}

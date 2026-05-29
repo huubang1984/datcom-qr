@@ -1,0 +1,22 @@
+{% extends "admin_base.html" %}
+{% block title %}Cấu hình{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:16px">Cấu hình hệ thống</h1>
+
+<div class="card" style="max-width:520px">
+  <form method="post">
+    <label>Đơn giá 1 suất cơm (VND)</label>
+    <input type="number" name="meal_price" value="{{ cfg.meal_price }}" min="0" step="1000">
+
+    <label style="margin-top:16px">Giờ chốt đăng ký (HH:MM)</label>
+    <input type="text" name="register_cutoff" value="{{ cfg.register_cutoff }}" placeholder="10:00">
+
+    <label style="font-weight:400;margin-top:16px">
+      <input type="checkbox" name="register_cutoff_enabled" {% if cfg.register_cutoff_enabled == '1' %}checked{% endif %}>
+      Bật giới hạn giờ đăng ký (tắt = cho đăng ký cả ngày)
+    </label>
+
+    <button class="btn btn-primary" type="submit">Lưu cấu hình</button>
+  </form>
+</div>
+{% endblock %}
