@@ -16,6 +16,14 @@
       Bật giới hạn giờ đăng ký (tắt = cho đăng ký cả ngày)
     </label>
 
+    <label style="margin-top:16px">Giờ chốt hủy đăng ký (HH:MM)</label>
+    <input type="text" name="cancel_cutoff" value="{{ cfg.cancel_cutoff }}" placeholder="10:00">
+
+    <label style="font-weight:400;margin-top:16px">
+      <input type="checkbox" name="cancel_cutoff_enabled" {% if cfg.cancel_cutoff_enabled == '1' %}checked{% endif %}>
+      Bật giới hạn giờ hủy (tắt = cho hủy cả ngày)
+    </label>
+
     <label style="font-weight:400;margin-top:16px">
       <input type="checkbox" name="allow_next_day" {% if cfg.allow_next_day == '1' %}checked{% endif %}>
       Cho phép đặt cơm trước cho <strong>ngày mai</strong>

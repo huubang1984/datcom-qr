@@ -169,9 +169,11 @@ def register_employee_routes(app):
         if order.picked_up_at is not None:
             return jsonify(ok=False, error="Đã nhận cơm rồi, không thể hủy."), 409
 
-        # Chỉ áp giới hạn giờ khi hủy suất của hôm nay.
-        if target_date == vn_today() and _cutoff_blocked():
-            return jsonify(ok=False, error="Đã quá giờ, không thể hủy đăng ký."), 409
+        # Chỉ áp giới hạn giờ khi hủy suất của hôm nay (ngày mai hủy trước thoải mái).
+        if target_date == vn_today():
+            cancel_err = _cancel_cutoff_blocked()
+            if cancel_err:
+                return jsonify(ok=False, error=cancel_err), 409
 
         db.session.delete(order)
         db.session.commit()
@@ -211,6 +213,17 @@ def _cutoff_blocked():
     cutoff = _parse_hhmm(cutoff_str)
     if cutoff and vn_now().time() > cutoff:
         return f"Đã quá giờ đăng ký ({cutoff_str}). Vui lòng đăng ký sớm hơn."
+    return None
+
+
+def _cancel_cutoff_blocked():
+    """Trả thông báo lỗi nếu đã quá giờ chốt hủy, ngược lại trả None."""
+    if get_setting("cancel_cutoff_enabled", "1") != "1":
+        return None
+    cutoff_str = get_setting("cancel_cutoff", "10:00")
+    cutoff = _parse_hhmm(cutoff_str)
+    if cutoff and vn_now().time() > cutoff:
+        return f"Đã quá giờ hủy ({cutoff_str}). Không thể hủy đăng ký."
     return None
 
 
@@ -436,6 +449,9 @@ def register_admin_routes(app):
             set_setting("register_cutoff", request.form.get("register_cutoff", "10:00").strip())
             set_setting("register_cutoff_enabled",
                         "1" if request.form.get("register_cutoff_enabled") == "on" else "0")
+            set_setting("cancel_cutoff", request.form.get("cancel_cutoff", "10:00").strip())
+            set_setting("cancel_cutoff_enabled",
+                        "1" if request.form.get("cancel_cutoff_enabled") == "on" else "0")
             set_setting("allow_next_day",
                         "1" if request.form.get("allow_next_day") == "on" else "0")
             db.session.commit()
