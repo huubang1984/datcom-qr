@@ -16,6 +16,11 @@
       Bật giới hạn giờ đăng ký (tắt = cho đăng ký cả ngày)
     </label>
 
+    <label style="font-weight:400;margin-top:16px">
+      <input type="checkbox" name="allow_next_day" {% if cfg.allow_next_day == '1' %}checked{% endif %}>
+      Cho phép đặt cơm trước cho <strong>ngày mai</strong>
+    </label>
+
     <button class="btn btn-primary" type="submit">Lưu cấu hình</button>
   </form>
 </div>

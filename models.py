@@ -78,6 +78,7 @@ DEFAULT_SETTINGS = {
     "meal_price": "30000",          # giá 1 suất cơm (VND)
     "register_cutoff": "10:00",     # giờ chốt đăng ký trong ngày (HH:MM)
     "register_cutoff_enabled": "1", # 1 = bật giới hạn giờ, 0 = đăng ký cả ngày
+    "allow_next_day": "1",          # 1 = cho phép đặt cơm cho ngày mai, 0 = chỉ hôm nay
 }
 
 

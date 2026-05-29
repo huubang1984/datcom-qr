@@ -6,10 +6,12 @@
 
 **Nhân viên** (quét 1 mã QR dùng chung):
 1. Quét QR → mở trang web → nhập **mã nhân viên**
-2. Màn hình hiện **tên** để xác nhận đúng người + trạng thái hôm nay
-3. Chọn **Đăng ký đặt cơm** hoặc **Xác nhận đã nhận cơm**
+2. Màn hình hiện **tên** để xác nhận đúng người + trạng thái
+3. Chọn ngày **Hôm nay / Ngày mai**, rồi **Đăng ký** / **Hủy** / **Xác nhận đã nhận cơm**
 4. Nhập **mã PIN** để xác nhận (tránh nhầm/đặt hộ)
 5. Hệ thống tự ghi nhận ngày giờ
+
+> Đặt trước cho **ngày mai** không bị giới hạn giờ chốt; HC có thể bật/tắt tính năng này trong Cấu hình. Nhận cơm chỉ áp dụng cho suất của hôm nay.
 
 **Cơ chế chặn quét trùng:**
 - Mỗi nhân viên chỉ đăng ký **1 suất/ngày** (chặn ở tầng DB bằng unique constraint).
@@ -21,7 +23,7 @@
 - **Nhân viên**: thêm/sửa NV, đặt lại PIN, khóa/mở.
 - **Báo cáo tháng**: số ngày đặt × đơn giá = tiền trừ mỗi NV; xuất **CSV (mở bằng Excel)**.
 - **Mã QR**: sinh & in mã QR poster.
-- **Cấu hình**: đơn giá suất cơm, giờ chốt đăng ký.
+- **Cấu hình**: đơn giá suất cơm, giờ chốt đăng ký, bật/tắt đặt trước cho ngày mai.
 
 ## Chạy local (Windows / PowerShell)
 

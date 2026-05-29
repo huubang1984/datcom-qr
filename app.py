@@ -1,7 +1,7 @@
 import csv
 import io
 import os
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from functools import wraps
 
 from flask import (
@@ -57,7 +57,7 @@ def register_employee_routes(app):
 
     @app.post("/api/lookup")
     def api_lookup():
-        """Bước 1: nhập mã NV -> trả tên để xác nhận đúng người + trạng thái hôm nay."""
+        """Bước 1: nhập mã NV -> trả tên để xác nhận + trạng thái hôm nay & ngày mai."""
         data = request.get_json(silent=True) or {}
         code = (data.get("code") or "").strip()
         if not code:
@@ -67,45 +67,65 @@ def register_employee_routes(app):
         if emp is None or not emp.active:
             return jsonify(ok=False, error="Không tìm thấy mã nhân viên hoặc đã bị khóa."), 404
 
-        order = MealOrder.query.filter_by(employee_id=emp.id, order_date=vn_today()).first()
+        today = vn_today()
+        tomorrow = today + timedelta(days=1)
+        o_today = MealOrder.query.filter_by(employee_id=emp.id, order_date=today).first()
+        o_tom = MealOrder.query.filter_by(employee_id=emp.id, order_date=tomorrow).first()
         return jsonify(
             ok=True,
             name=emp.name,
             department=emp.department or "",
-            registered=order is not None,
-            picked_up=bool(order and order.picked_up_at),
+            allow_next_day=(get_setting("allow_next_day", "1") == "1"),
+            today={
+                "date": today.strftime("%d/%m"),
+                "registered": o_today is not None,
+                "picked_up": bool(o_today and o_today.picked_up_at),
+            },
+            tomorrow={
+                "date": tomorrow.strftime("%d/%m"),
+                "registered": o_tom is not None,
+                "picked_up": bool(o_tom and o_tom.picked_up_at),
+            },
         )
 
     @app.post("/api/register")
     def api_register():
-        """Đăng ký đặt cơm cho hôm nay. Chặn nếu đã đặt rồi."""
+        """Đăng ký đặt cơm cho hôm nay hoặc ngày mai. Chặn nếu đã đặt rồi."""
         emp, err, status = _authenticate()
         if err:
             return jsonify(ok=False, error=err), status
 
-        cutoff_err = _cutoff_blocked()
-        if cutoff_err:
-            return jsonify(ok=False, error=cutoff_err), 409
+        target_date, derr = _resolve_target_date(_get_target())
+        if derr:
+            return jsonify(ok=False, error=derr), 409
 
-        existing = MealOrder.query.filter_by(employee_id=emp.id, order_date=vn_today()).first()
+        # Giờ chốt chỉ áp dụng khi đặt cho hôm nay (đặt trước cho ngày mai không bị chặn).
+        if target_date == vn_today():
+            cutoff_err = _cutoff_blocked()
+            if cutoff_err:
+                return jsonify(ok=False, error=cutoff_err), 409
+
+        day_label = _day_label(target_date)
+        existing = MealOrder.query.filter_by(employee_id=emp.id, order_date=target_date).first()
         if existing is not None:
             return jsonify(
                 ok=False,
-                error="Bạn đã đăng ký đặt cơm hôm nay rồi.",
+                error=f"Bạn đã đăng ký đặt cơm {day_label} rồi.",
                 duplicate=True,
             ), 409
 
         now = vn_now()
-        order = MealOrder(employee_id=emp.id, order_date=now.date(), registered_at=now)
+        order = MealOrder(employee_id=emp.id, order_date=target_date, registered_at=now)
         db.session.add(order)
         try:
             db.session.commit()
         except IntegrityError:
             # Trường hợp 2 lần quét gần như đồng thời -> unique constraint chặn
             db.session.rollback()
-            return jsonify(ok=False, error="Bạn đã đăng ký đặt cơm hôm nay rồi.", duplicate=True), 409
+            return jsonify(ok=False, error=f"Bạn đã đăng ký đặt cơm {day_label} rồi.", duplicate=True), 409
 
-        return jsonify(ok=True, message="Đăng ký đặt cơm thành công!",
+        return jsonify(ok=True,
+                       message=f"Đăng ký đặt cơm {day_label} thành công!",
                        time=now.strftime("%H:%M %d/%m/%Y"))
 
     @app.post("/api/pickup")
@@ -133,24 +153,29 @@ def register_employee_routes(app):
 
     @app.post("/api/cancel")
     def api_cancel():
-        """Hủy đăng ký đặt cơm hôm nay. Chặn nếu chưa đăng ký, đã nhận, hoặc quá giờ chốt."""
+        """Hủy đăng ký (hôm nay/ngày mai). Chặn nếu chưa đăng ký, đã nhận, hoặc quá giờ chốt."""
         emp, err, status = _authenticate()
         if err:
             return jsonify(ok=False, error=err), status
 
-        order = MealOrder.query.filter_by(employee_id=emp.id, order_date=vn_today()).first()
+        target_date, derr = _resolve_target_date(_get_target())
+        if derr:
+            return jsonify(ok=False, error=derr), 409
+
+        day_label = _day_label(target_date)
+        order = MealOrder.query.filter_by(employee_id=emp.id, order_date=target_date).first()
         if order is None:
-            return jsonify(ok=False, error="Bạn chưa đăng ký đặt cơm hôm nay."), 409
+            return jsonify(ok=False, error=f"Bạn chưa đăng ký đặt cơm {day_label}."), 409
         if order.picked_up_at is not None:
             return jsonify(ok=False, error="Đã nhận cơm rồi, không thể hủy."), 409
 
-        cutoff_err = _cutoff_blocked()
-        if cutoff_err:
+        # Chỉ áp giới hạn giờ khi hủy suất của hôm nay.
+        if target_date == vn_today() and _cutoff_blocked():
             return jsonify(ok=False, error="Đã quá giờ, không thể hủy đăng ký."), 409
 
         db.session.delete(order)
         db.session.commit()
-        return jsonify(ok=True, message="Đã hủy đăng ký đặt cơm.",
+        return jsonify(ok=True, message=f"Đã hủy đăng ký đặt cơm {day_label}.",
                        time=vn_now().strftime("%H:%M %d/%m/%Y"))
 
 
@@ -187,6 +212,26 @@ def _cutoff_blocked():
     if cutoff and vn_now().time() > cutoff:
         return f"Đã quá giờ đăng ký ({cutoff_str}). Vui lòng đăng ký sớm hơn."
     return None
+
+
+def _get_target():
+    """Lấy mục tiêu ngày từ request body: 'today' (mặc định) hoặc 'tomorrow'."""
+    data = request.get_json(silent=True) or {}
+    return (data.get("target") or "today").strip()
+
+
+def _resolve_target_date(target):
+    """Chuyển target -> ngày thực tế. Trả (date, error)."""
+    today = vn_today()
+    if target == "tomorrow":
+        if get_setting("allow_next_day", "1") != "1":
+            return None, "Hiện không mở đặt cơm cho ngày mai."
+        return today + timedelta(days=1), None
+    return today, None
+
+
+def _day_label(target_date):
+    return "hôm nay" if target_date == vn_today() else f"ngày {target_date.strftime('%d/%m')}"
 
 
 # ---------------------------------------------------------------------------
@@ -391,6 +436,8 @@ def register_admin_routes(app):
             set_setting("register_cutoff", request.form.get("register_cutoff", "10:00").strip())
             set_setting("register_cutoff_enabled",
                         "1" if request.form.get("register_cutoff_enabled") == "on" else "0")
+            set_setting("allow_next_day",
+                        "1" if request.form.get("allow_next_day") == "on" else "0")
             db.session.commit()
             flash("Đã lưu cấu hình.", "success")
             return redirect(url_for("admin_config"))
